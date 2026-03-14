@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- THE COUNCIL - A web app that summons legendary personalities to answer questions -->
 <head>
+<!-- Meta tags for character encoding and responsive viewport -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>THE COUNCIL 🏛️</title>
+<title>The Council</title>
+<!-- Google Fonts import for comic book style typography -->
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&family=Permanent+Marker&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
 <style>
+  /* CSS Custom Properties (Variables) - Define consistent color scheme and design tokens */
   :root {
     --yellow: #FFE600;
     --red: #FF3333;
@@ -19,8 +23,10 @@
     --card-radius: 20px;
   }
 
+  /* Global reset - Remove default margins and padding */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* Main body styles - Comic book aesthetic with dotted background pattern */
   body {
     font-family: 'Comic Neue', 'Comic Sans MS', cursive;
     background-color: var(--bg);
@@ -29,6 +35,7 @@
     position: relative;
   }
 
+  /* Background pattern overlay - Creates comic book dot pattern effect */
   body::before {
     content: '';
     position: fixed; inset: 0;
@@ -41,6 +48,7 @@
     background-position: 0 0, 7px 7px;
   }
 
+  /* Main content wrapper - Centers content and provides spacing */
   .main-wrap {
     position: relative;
     z-index: 1;
@@ -49,8 +57,10 @@
     padding: 3rem 1.5rem 5rem;
   }
 
+  /* Header section styles */
   .header { text-align: center; margin-bottom: 2.5rem; }
 
+  /* Header badge - Promotional banner at the top */
   .header-badge {
     display: inline-block;
     background: #D946EF;
@@ -65,6 +75,7 @@
     margin-bottom: 1rem;
   }
 
+  /* Main title styling - Large comic book style heading with shadow effects */
   h1 {
     font-family: 'Bangers', cursive;
     font-size: clamp(5rem, 15vw, 9.5rem);
@@ -79,11 +90,13 @@
     display: inline-block;
   }
 
+  /* Title wrapper container for positioning the starburst background */
   .title-wrap {
     position: relative;
     display: inline-block;
     margin-bottom: 0.5rem;
   }
+  /* Starburst background animation - Rotating polygon behind the title */
   .starburst {
     position: absolute;
     inset: -18px;
@@ -92,8 +105,10 @@
     z-index: -1;
     animation: starSpin 20s linear infinite;
   }
+  /* Keyframe animation for continuous starburst rotation */
   @keyframes starSpin { to { transform: rotate(360deg); } }
 
+  /* Subtitle text - Descriptive text below the main title */
   .header-sub {
     font-family: 'Boogaloo', cursive;
     font-size: 1.25rem;
@@ -103,6 +118,7 @@
     letter-spacing: 0.5px;
   }
 
+  /* Question input section - Yellow background container for user input */
   .question-section {
     background: #FFEB3B;
     border: 4px solid var(--ink);
@@ -114,6 +130,7 @@
     overflow: hidden;
   }
 
+  /* Question label text - "Your Question / Opinion :" heading */
   .question-label {
     font-family: 'Bangers', cursive;
     font-size: 1.7rem;
@@ -121,6 +138,7 @@
     margin-bottom: 0.9rem;
     -webkit-text-stroke: 1px var(--ink);
   }
+  /* Question textarea input field */
   .question-textarea {
     width: 100%;
     min-height: 90px;
@@ -136,15 +154,19 @@
     line-height: 1.6;
     color: var(--ink);
   }
+  /* Focus state for textarea - Adds shadow when user clicks on it */
   .question-textarea:focus { box-shadow: 5px 5px 0 var(--ink); }
+  /* Placeholder text styling */
   .question-textarea::placeholder { color: #bbb; font-family: 'Boogaloo', cursive; }
 
+  /* Personality chips container - Shows selected legendary personalities */
   .personalities-row {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 1rem;
   }
+  /* Individual personality chip styling */
   .personality-chip {
     display: inline-flex;
     align-items: center;
@@ -158,6 +180,7 @@
     box-shadow: 2px 2px 0 var(--ink);
   }
 
+  /* Button row container - Holds the main action buttons */
   .btn-row {
     display: flex;
     gap: 1rem;
@@ -165,6 +188,7 @@
     margin-bottom: 2rem;
     align-items: center;
   }
+  /* Base button styling - Comic book style with shadow effects */
   .btn {
     font-family: 'Bangers', cursive;
     letter-spacing: 2.5px;
@@ -180,13 +204,18 @@
     align-items: center;
     gap: 8px;
   }
+  /* Active state - Button appears pressed down when clicked */
   .btn:active:not(:disabled) { transform: translate(4px,4px); box-shadow: 2px 2px 0 var(--ink); }
+  /* Main summon button - Red, large, prominent */
   .btn-summon { background: #FF2222; color: #111; font-size: 1.5rem; flex: 1; min-width: 200px; justify-content: center; }
   .btn-summon:hover:not(:disabled) { background: #cc0000; }
+  /* Randomize button - Green, smaller */
   .btn-randomize { background: #00CC66; color: var(--ink); font-size: 1.15rem; }
   .btn-randomize:hover:not(:disabled) { background: #00aa55; }
+  /* Disabled state - When API call is in progress */
   .btn:disabled { opacity: 0.42; cursor: not-allowed; }
 
+  /* Error message box - Hidden by default, shown when validation fails */
   .error-box {
     display: none;
     background: #fff0f0;
@@ -199,39 +228,56 @@
     color: #a00;
     box-shadow: 4px 4px 0 var(--ink);
   }
+  /* Show class - Makes error box visible */
   .error-box.show { display: block; }
 
+  /* Loading animation container - Hidden by default, shown during API calls */
   .loading-wrap { display: none; text-align: center; padding: 2.5rem 2rem 3rem; }
   .loading-wrap.show { display: block; }
+  /* Loading title text - "SUMMONING..." with pulsing animation */
   .loading-title {
     font-family: 'Bangers', cursive;
     font-size: 2.5rem;
     letter-spacing: 4px;
     color: var(--red);
-    -webkit-text-stroke: 1.5px var(--ink);
+    -webkit-text-stroke: 1.5px var(--ind);
     animation: pulse 0.9s ease-in-out infinite alternate;
     margin-bottom: 0.3rem;
   }
+  /* Loading subtitle text */
   .loading-sub { font-family: 'Boogaloo', cursive; color: #999; font-size: 1.05rem; margin-bottom: 1.8rem; }
+  /* SVG animation container */
   .loader-stage { display: flex; justify-content: center; align-items: center; }
+  /* SVG dimensions and overflow settings */
   .loader-svg { width: 260px; height: 130px; overflow: visible; }
 
+  /* Orbital dots animation - Rotating dots around center point */
   .orbit-dot { animation: orbitSpin 1.8s linear infinite; transform-origin: 130px 65px; }
+  /* Staggered animation delays for each orbit dot */
   .orbit-dot:nth-child(1){ animation-delay: 0s; }
   .orbit-dot:nth-child(2){ animation-delay: -0.45s; }
   .orbit-dot:nth-child(3){ animation-delay: -0.9s; }
   .orbit-dot:nth-child(4){ animation-delay: -1.35s; }
+  /* Keyframe animation for 360-degree rotation */
   @keyframes orbitSpin { to { transform: rotate(360deg); } }
+  /* Center burst animation - Pulsing star in the middle */
   .centre-burst { animation: burstPulse 0.7s ease-in-out infinite alternate; transform-origin: 130px 65px; }
+  /* Keyframe for scaling animation */
   @keyframes burstPulse { from{transform:scale(0.88)} to{transform:scale(1.08)} }
+  /* Lightning bolt animations - Left and right zapping effects */
   .zap-left  { animation: zapLeft  0.6s ease-in-out infinite alternate; transform-origin: 50px 65px; }
   .zap-right { animation: zapRight 0.6s ease-in-out infinite alternate; transform-origin: 210px 65px; }
+  /* Keyframes for lightning bolt rotation and scaling */
   @keyframes zapLeft  { from{transform:rotate(-15deg) scale(0.9)} to{transform:rotate(15deg) scale(1.1)} }
   @keyframes zapRight { from{transform:rotate(15deg)  scale(0.9)} to{transform:rotate(-15deg) scale(1.1)} }
+  /* Question mark bounce animation */
   .qmark { animation: qBounce 0.5s ease-in-out infinite alternate; transform-origin: 130px 65px; }
+  /* Keyframe for vertical bouncing */
   @keyframes qBounce { from{transform:translateY(3px)} to{transform:translateY(-5px)} }
 
+  /* Loading dots container - Animated dots below the SVG */
   .loading-dots { display: flex; justify-content: center; gap: 10px; margin-top: 1.2rem; }
+  /* Individual loading dot styling */
   .loading-dots span {
     width: 14px; height: 14px;
     border-radius: 50%;
@@ -239,13 +285,17 @@
     display: inline-block;
     animation: dotBounce 0.6s ease-in-out infinite alternate;
   }
+  /* Color and delay variations for each dot */
   .loading-dots span:nth-child(1){ background:var(--red);    animation-delay:0s; }
   .loading-dots span:nth-child(2){ background:var(--blue);   animation-delay:0.2s; }
   .loading-dots span:nth-child(3){ background:var(--green);  animation-delay:0.4s; }
   .loading-dots span:nth-child(4){ background:var(--purple); animation-delay:0.6s; }
+  /* Keyframe for dot bouncing animation */
   @keyframes dotBounce { from{transform:translateY(0) scale(1)} to{transform:translateY(-10px) scale(1.2)} }
+  /* Keyframe for pulsing animation used by loading title */
   @keyframes pulse { from{opacity:0.4;transform:scale(0.96)} to{opacity:1;transform:scale(1.05)} }
 
+  /* Council announcement strip - Blue banner that appears when results are ready */
   .council-strip {
     display: none;
     background: #2B7FFF;
@@ -260,15 +310,19 @@
     margin-bottom: 1.5rem;
     box-shadow: 6px 6px 0 var(--ink);
   }
+  /* Show class - Makes council strip visible */
   .council-strip.show { display: block; }
 
+  /* Council grid layout - 2-column grid for member cards */
   .council-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.6rem;
   }
+  /* Responsive design - Single column on mobile devices */
   @media (max-width: 580px) { .council-grid { grid-template-columns: 1fr; } }
 
+  /* Individual member card styling - Comic book style with shadow */
   .member-card {
     background: #fff;
     border: 4px solid var(--ink);
@@ -278,16 +332,20 @@
     animation: cardPop 0.45s cubic-bezier(0.175,0.885,0.32,1.275) both;
     transition: transform 0.18s;
   }
+  /* Hover effect - Card lifts and slightly rotates */
   .member-card:hover { transform: translateY(-5px) rotate(0.6deg); }
+  /* Card entrance animation - Bouncy appearance effect */
   @keyframes cardPop {
     from { opacity:0; transform:scale(0.3) rotate(-15deg); }
     to   { opacity:1; transform:scale(1) rotate(0deg); }
   }
+  /* Staggered animation delays for sequential card appearance */
   .member-card:nth-child(1){animation-delay:0.05s}
   .member-card:nth-child(2){animation-delay:0.14s}
   .member-card:nth-child(3){animation-delay:0.23s}
   .member-card:nth-child(4){animation-delay:0.32s}
 
+  /* Card header section - Contains avatar, name, and archetype */
   .card-header {
     padding: 1.1rem 1.2rem 0.9rem;
     border-bottom: 3px solid var(--ink);
@@ -295,6 +353,7 @@
     align-items: center;
     gap: 0.8rem;
   }
+  /* Avatar emoji container - Circular background for personality emoji */
   .avatar-emoji {
     width: 62px; height: 62px;
     border-radius: 50%;
@@ -304,7 +363,9 @@
     flex-shrink: 0;
     box-shadow: 3px 3px 0 var(--ink);
   }
+  /* Member info container - Name and archetype text */
   .member-info { flex: 1; min-width: 0; }
+  /* Member name styling */
   .member-name {
     font-family: 'Bangers', cursive;
     font-size: 1.35rem;
@@ -312,6 +373,7 @@
     line-height: 1.1;
     -webkit-text-stroke: 0.5px var(--ink);
   }
+  /* Member archetype/subtitle styling */
   .member-archetype {
     font-family: 'Boogaloo', cursive;
     font-size: 0.78rem;
@@ -319,6 +381,7 @@
     letter-spacing: 0.8px;
     margin-top: 2px;
   }
+  /* Vibe badge - Small tag showing personality vibe */
   .vibe-badge {
     font-family: 'Boogaloo', cursive;
     font-size: 0.7rem;
@@ -332,7 +395,9 @@
     box-shadow: 2px 2px 0 var(--ink);
   }
 
+  /* Speech bubble container - Holds the personality's response */
   .speech-area { padding: 1rem 1.2rem 1.3rem; }
+  /* Speech bubble styling - Comic book style with tail pointer */
   .speech-bubble {
     position: relative;
     border: 3px solid var(--ink);
@@ -345,6 +410,7 @@
     color: var(--ink);
     background: #fffbf0;
   }
+  /* Speech bubble tail - Left-pointing triangle using CSS borders */
   .speech-bubble::before {
     content: '';
     position: absolute;
@@ -354,6 +420,7 @@
     border-bottom: 10px solid transparent;
     border-right: 15px solid var(--ink);
   }
+  /* Inner tail - Creates the speech bubble effect with lighter color */
   .speech-bubble::after {
     content: '';
     position: absolute;
@@ -364,6 +431,7 @@
     border-right: 12px solid #fffbf0;
   }
 
+  /* Theme color variations - Different background colors for each card */
   .theme-0 .card-header { background: #fff0f0; }
   .theme-0 .avatar-emoji { background: #ffd0d0; }
   .theme-0 .vibe-badge   { background: #ffd0d0; }
@@ -377,17 +445,24 @@
   .theme-3 .avatar-emoji { background: #ffe080; }
   .theme-3 .vibe-badge   { background: #ffe080; }
 
+  /* Empty state styling - Shows when no council members are displayed */
   .empty-state { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: #ccc; }
+  /* Empty state emoji styling */
   .empty-emoji { font-size: 5rem; display: block; margin-bottom: 1rem; }
+  /* Empty state text styling */
   .empty-text { font-family: 'Bangers', cursive; font-size: 1.7rem; letter-spacing: 2px; }
+  /* Empty state subtitle styling */
   .empty-sub { font-family: 'Boogaloo', cursive; font-size: 1.05rem; margin-top: 0.4rem; color: #ddd; }
 
+  /* Footer styling - Bottom section of the page */
   .footer { text-align: center; margin-top: 3rem; font-family: 'Boogaloo', cursive; font-size: 0.9rem; color: #bbb; }
 </style>
 </head>
 <body>
+<!-- Main content wrapper -->
 <div class="main-wrap">
 
+  <!-- Header section with title and subtitle -->
   <div class="header">
     <div class="header-badge"> SUMMONING LEGENDS SINCE THE DAWN OF TIME </div>
     <div class="title-wrap">
@@ -396,21 +471,27 @@
     <p class="header-sub">Ask anything. 4 legendary minds bicker, philosophize, and spectacularly disagree.</p>
   </div>
 
+  <!-- Question input section -->
   <div class="question-section">
     <div class="question-label">🎤 Your Question / Opinion :</div>
     <textarea class="question-textarea" id="questionInput" placeholder="e.g. Should I quit my job and become a goat farmer? Is pineapple on pizza okay? Should I text my ex?"></textarea>
+    <!-- Personality chips will be dynamically inserted here -->
     <div class="personalities-row" id="personalityChips"></div>
   </div>
 
+  <!-- Action buttons -->
   <div class="btn-row">
     <button class="btn btn-summon" id="summonBtn" onclick="summonCouncil()">🏛️ SUMMON THE COUNCIL</button>
     <button class="btn btn-randomize" id="randomizeBtn" onclick="randomizePersonalities()">🎲 RANDOMIZE</button>
   </div>
 
+  <!-- Error message container -->
   <div class="error-box" id="errorBox"></div>
 
+  <!-- Loading animation container -->
   <div class="loading-wrap" id="loadingWrap">
     <div class="loader-stage">
+      <!-- SVG loading animation with orbiting dots and lightning effects -->
       <svg class="loader-svg" viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg">
         <g class="orbit-dot"><circle cx="130" cy="18" r="9" fill="#FF3333" stroke="#111" stroke-width="2.5"/><circle cx="130" cy="18" r="4" fill="#fff" opacity="0.5"/></g>
         <g class="orbit-dot"><circle cx="195" cy="65" r="9" fill="#2B7FFF" stroke="#111" stroke-width="2.5"/><circle cx="195" cy="65" r="4" fill="#fff" opacity="0.5"/></g>
@@ -421,11 +502,14 @@
         <g class="centre-burst"><polygon points="130,38 136,55 153,48 144,63 162,65 144,67 153,82 136,75 130,92 124,75 107,82 116,67 98,65 116,63 107,48 124,55" fill="#FF3333" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/></g>
       </svg>
     </div>
+    <!-- Animated loading dots -->
     <div class="loading-dots"><span></span><span></span><span></span><span></span></div>
   </div>
 
+  <!-- Council announcement strip -->
   <div class="council-strip" id="councilStrip">🔊 THE COUNCIL HAS SPOKEN 🔊</div>
 
+  <!-- Council grid where member cards will be displayed -->
   <div class="council-grid" id="councilGrid">
     <div class="empty-state"></div>
   </div>
@@ -439,6 +523,8 @@
   const WORKER_URL = 'https://thecouncil-api.shaurya-chopra.workers.dev';
   // ================================================================
 
+// Complete list of all available legendary personalities
+// Each personality has: name, emoji, archetype (role), and vibe (personality trait)
 const ALL_PERSONALITIES = [
   {name:"Socrates",emoji:"🏺",archetype:"Greek Philosopher",vibe:"Annoyingly Wise"},
   {name:"Steve Jobs",emoji:"🍎",archetype:"Tech Visionary",vibe:"Brutally Honest"},
@@ -454,7 +540,7 @@ const ALL_PERSONALITIES = [
   {name:"Gandhi",emoji:"☮️",archetype:"Peaceful Rebel",vibe:"Aggressively Chill"},
   {name:"Narendra Modi",emoji:"🇮🇳",archetype:"Prime Minister",vibe:"Development First"},
   {name:"Darwin",emoji:"🐒",archetype:"Evolutionary Biologist",vibe:"Survival Mode"},
-  {name:"Edgy Redditor",emoji:"�‍💻",archetype:"Internet Debater",vibe:"Actually..."},
+  {name:"Edgy Redditor",emoji:"🤓‍💻",archetype:"Internet Debater",vibe:"Actually..."},
   {name:"Leonardo da Vinci",emoji:"🎨",archetype:"Renaissance Man",vibe:"Annoyingly Talented"},
   {name:"Napoleon",emoji:"🎖️",archetype:"Military Emperor",vibe:"Short-Fused Genius"},
   {name:"Sherlock Holmes",emoji:"🔍",archetype:"Fictional Detective",vibe:"Condescending Genius"},
@@ -466,7 +552,7 @@ const ALL_PERSONALITIES = [
   {name:"The Stock Market",emoji:"📈",archetype:"Chaotic Oracle",vibe:"Irrationally Exuberant"},
   {name:"A Flat Earther",emoji:"🌐",archetype:"Alternative Theorist",vibe:"Confidently Wrong"},
   {name:"Gordon Ramsay",emoji:"👨‍🍳",archetype:"Celebrity Chef",vibe:"Aggressively Disappointed"},
-  {name:"Samosa",emoji:"�",archetype:"Indian Snack",vibe:"Crispy & Spicy"},
+  {name:"Samosa",emoji:"🥟",archetype:"Indian Snack",vibe:"Crispy & Spicy"},
   {name:"Chota Bheem",emoji:"🦸",archetype:"Indian Superkid",vibe:"Laddoo Power"},
   {name:"A Conspiracy Theorist",emoji:"📡",archetype:"Truth Seeker",vibe:"Sees Patterns Everywhere"},
   {name:"A Motivational Poster",emoji:"💪",archetype:"Office Wall Decor",vibe:"Hollow Enthusiasm"},
@@ -477,55 +563,79 @@ const ALL_PERSONALITIES = [
   {name:"A Pirate Captain",emoji:"🏴‍☠️",archetype:"Seafaring Outlaw",vibe:"Chaotically Free"},
 ];
 
+// Array to store currently selected personalities for the council
 let currentPersonalities = [];
 
+// Utility function to pick random items from an array
+// Parameters: arr (array to pick from), n (number of items to pick)
+// Returns: Array with n randomly selected items
 function pickRandom(arr, n) {
   return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
 }
+
+// Randomize the council by selecting 4 random personalities
+// Updates currentPersonalities array and refreshes the UI chips
 function randomizePersonalities() {
   currentPersonalities = pickRandom(ALL_PERSONALITIES, 4);
   renderChips();
 }
+
+// Render personality chips in the UI
+// Displays the currently selected personalities as styled chips
 function renderChips() {
   document.getElementById('personalityChips').innerHTML =
     currentPersonalities.map(p => `<div class="personality-chip">${p.emoji} ${escHtml(p.name)}</div>`).join('');
 }
 
+// Main function to summon the council and get responses
+// Validates input, shows loading, calls API, and renders results
 async function summonCouncil() {
+  // Get user's question from textarea
   const question = document.getElementById('questionInput').value.trim();
   const errorBox = document.getElementById('errorBox');
   errorBox.classList.remove('show');
 
+  // Input validation
   if (!question) { showError('🎤 Please type your question or dilemma first!'); return; }
   if (currentPersonalities.length === 0) { showError('🎲 Click Randomize to pick your legends!'); return; }
 
+  // Show loading state and clear previous results
   setLoading(true);
   document.getElementById('councilStrip').classList.remove('show');
   document.getElementById('councilGrid').innerHTML = '';
 
   try {
+    // Make API call to the backend
     const res = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, personalities: currentPersonalities })
     });
 
+    // Handle API errors
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || `Error ${res.status}`);
     }
 
+    // Process successful response
     const data = await res.json();
     setLoading(false);
     renderCouncil(data.members);
   } catch (err) {
+    // Handle network or API errors
     setLoading(false);
     showError('😬 ' + (err.message || 'Something went wrong. Try again!'));
   }
 }
 
+// Render the council member cards with their responses
+// Parameters: members (array of member objects with responses)
 function renderCouncil(members) {
+  // Show the council announcement strip
   document.getElementById('councilStrip').classList.add('show');
+  
+  // Generate HTML for each member card and insert into grid
   document.getElementById('councilGrid').innerHTML = members.map((m, i) => `
     <div class="member-card theme-${i % 4}">
       <div class="card-header">
@@ -542,20 +652,31 @@ function renderCouncil(members) {
     </div>`).join('');
 }
 
+// Control loading state UI
+// Parameters: on (boolean) - true to show loading, false to hide
 function setLoading(on) {
   document.getElementById('loadingWrap').classList.toggle('show', on);
   document.getElementById('summonBtn').disabled = on;
   document.getElementById('randomizeBtn').disabled = on;
 }
+
+// Display error message to user
+// Parameters: msg (string) - error message to display
 function showError(msg) {
   const box = document.getElementById('errorBox');
   box.textContent = msg;
   box.classList.add('show');
 }
+
+// Escape HTML to prevent XSS attacks
+// Converts special characters to HTML entities
+// Parameters: str (string) - text to escape
+// Returns: Escaped HTML string
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Initialize the app by randomizing personalities on page load
 randomizePersonalities();
 </script>
 </body>
