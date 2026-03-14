@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE COUNCIL 🏛️</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&family=Permanent+Marker&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFE600;
+    --red: #FF3333;
+    --blue: #2B7FFF;
+    --green: #1DB954;
+    --orange: #FF8C00;
+    --purple: #9B30FF;
+    --pink: #FF4FA0;
+    --bg: #FFFDE8;
+    --ink: #111111;
+    --card-radius: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+    background-color: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle, rgba(0,0,0,0.18) 1.5px, transparent 1.5px),
+      radial-gradient(circle, rgba(255,230,0,0.35) 2px, transparent 2px);
+    background-size: 14px 14px, 28px 28px;
+    background-position: 0 0, 7px 7px;
+  }
+
+  .main-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+
+  .header-badge {
+    display: inline-block;
+    background: #D946EF;
+    color: #111;
+    font-family: 'Bangers', cursive;
+    letter-spacing: 4px;
+    font-size: 0.88rem;
+    padding: 5px 22px;
+    border-radius: 30px;
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(5rem, 15vw, 9.5rem);
+    letter-spacing: 10px;
+    line-height: 0.88;
+    color: #fff;
+    -webkit-text-stroke: 4px var(--ink);
+    paint-order: stroke fill;
+    filter: drop-shadow(10px 10px 0 var(--ink)) drop-shadow(-2px -2px 0 var(--ink));
+    margin-bottom: 0.6rem;
+    position: relative;
+    display: inline-block;
+  }
+
+  .title-wrap {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+  .starburst {
+    position: absolute;
+    inset: -18px;
+    background: #0047AB;
+    clip-path: polygon(50% 0%,61% 30%,93% 11%,78% 38%,100% 50%,78% 62%,93% 89%,61% 70%,50% 100%,39% 70%,7% 89%,22% 62%,0% 50%,22% 38%,7% 11%,39% 30%);
+    z-index: -1;
+    animation: starSpin 20s linear infinite;
+  }
+  @keyframes starSpin { to { transform: rotate(360deg); } }
+
+  .header-sub {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.25rem;
+    color: var(--ink);
+    opacity: 0.7;
+    margin-top: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  .question-section {
+    background: #FFEB3B;
+    border: 4px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 9px 9px 0 var(--ink);
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .question-label {
+    font-family: 'Bangers', cursive;
+    font-size: 1.7rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.9rem;
+    -webkit-text-stroke: 1px var(--ink);
+  }
+  .question-textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 0.9rem 1.1rem;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    font-family: 'Boogaloo', cursive;
+    font-size: 1rem;
+    resize: vertical;
+    background: #fff;
+    outline: none;
+    transition: box-shadow 0.15s;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .question-textarea:focus { box-shadow: 5px 5px 0 var(--ink); }
+  .question-textarea::placeholder { color: #bbb; font-family: 'Boogaloo', cursive; }
+
+  .personalities-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .personality-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    border: 2.5px solid var(--ink);
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-family: 'Boogaloo', cursive;
+    font-size: 0.9rem;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    align-items: center;
+  }
+  .btn {
+    font-family: 'Bangers', cursive;
+    letter-spacing: 2.5px;
+    padding: 0.75rem 1.8rem;
+    border: 3.5px solid var(--ink);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 6px 6px 0 var(--ink);
+    text-transform: uppercase;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:active:not(:disabled) { transform: translate(4px,4px); box-shadow: 2px 2px 0 var(--ink); }
+  .btn-summon { background: #FF2222; color: #111; font-size: 1.5rem; flex: 1; min-width: 200px; justify-content: center; }
+  .btn-summon:hover:not(:disabled) { background: #cc0000; }
+  .btn-randomize { background: #00CC66; color: var(--ink); font-size: 1.15rem; }
+  .btn-randomize:hover:not(:disabled) { background: #00aa55; }
+  .btn:disabled { opacity: 0.42; cursor: not-allowed; }
+
+  .error-box {
+    display: none;
+    background: #fff0f0;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Boogaloo', cursive;
+    font-size: 1rem;
+    color: #a00;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .error-box.show { display: block; }
+
+  .loading-wrap { display: none; text-align: center; padding: 2.5rem 2rem 3rem; }
+  .loading-wrap.show { display: block; }
+  .loading-title {
+    font-family: 'Bangers', cursive;
+    font-size: 2.5rem;
+    letter-spacing: 4px;
+    color: var(--red);
+    -webkit-text-stroke: 1.5px var(--ink);
+    animation: pulse 0.9s ease-in-out infinite alternate;
+    margin-bottom: 0.3rem;
+  }
+  .loading-sub { font-family: 'Boogaloo', cursive; color: #999; font-size: 1.05rem; margin-bottom: 1.8rem; }
+  .loader-stage { display: flex; justify-content: center; align-items: center; }
+  .loader-svg { width: 260px; height: 130px; overflow: visible; }
+
+  .orbit-dot { animation: orbitSpin 1.8s linear infinite; transform-origin: 130px 65px; }
+  .orbit-dot:nth-child(1){ animation-delay: 0s; }
+  .orbit-dot:nth-child(2){ animation-delay: -0.45s; }
+  .orbit-dot:nth-child(3){ animation-delay: -0.9s; }
+  .orbit-dot:nth-child(4){ animation-delay: -1.35s; }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+  .centre-burst { animation: burstPulse 0.7s ease-in-out infinite alternate; transform-origin: 130px 65px; }
+  @keyframes burstPulse { from{transform:scale(0.88)} to{transform:scale(1.08)} }
+  .zap-left  { animation: zapLeft  0.6s ease-in-out infinite alternate; transform-origin: 50px 65px; }
+  .zap-right { animation: zapRight 0.6s ease-in-out infinite alternate; transform-origin: 210px 65px; }
+  @keyframes zapLeft  { from{transform:rotate(-15deg) scale(0.9)} to{transform:rotate(15deg) scale(1.1)} }
+  @keyframes zapRight { from{transform:rotate(15deg)  scale(0.9)} to{transform:rotate(-15deg) scale(1.1)} }
+  .qmark { animation: qBounce 0.5s ease-in-out infinite alternate; transform-origin: 130px 65px; }
+  @keyframes qBounce { from{transform:translateY(3px)} to{transform:translateY(-5px)} }
+
+  .loading-dots { display: flex; justify-content: center; gap: 10px; margin-top: 1.2rem; }
+  .loading-dots span {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2.5px solid var(--ink);
+    display: inline-block;
+    animation: dotBounce 0.6s ease-in-out infinite alternate;
+  }
+  .loading-dots span:nth-child(1){ background:var(--red);    animation-delay:0s; }
+  .loading-dots span:nth-child(2){ background:var(--blue);   animation-delay:0.2s; }
+  .loading-dots span:nth-child(3){ background:var(--green);  animation-delay:0.4s; }
+  .loading-dots span:nth-child(4){ background:var(--purple); animation-delay:0.6s; }
+  @keyframes dotBounce { from{transform:translateY(0) scale(1)} to{transform:translateY(-10px) scale(1.2)} }
+  @keyframes pulse { from{opacity:0.4;transform:scale(0.96)} to{opacity:1;transform:scale(1.05)} }
+
+  .council-strip {
+    display: none;
+    background: #2B7FFF;
+    color: var(--ink);
+    font-family: 'Bangers', cursive;
+    font-size: 1.7rem;
+    letter-spacing: 5px;
+    text-align: center;
+    padding: 0.7rem 1rem;
+    border-radius: 14px;
+    border: 4px solid var(--ink);
+    margin-bottom: 1.5rem;
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+  .council-strip.show { display: block; }
+
+  .council-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.6rem;
+  }
+  @media (max-width: 580px) { .council-grid { grid-template-columns: 1fr; } }
+
+  .member-card {
+    background: #fff;
+    border: 4px solid var(--ink);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: 8px 8px 0 var(--ink);
+    animation: cardPop 0.45s cubic-bezier(0.175,0.885,0.32,1.275) both;
+    transition: transform 0.18s;
+  }
+  .member-card:hover { transform: translateY(-5px) rotate(0.6deg); }
+  @keyframes cardPop {
+    from { opacity:0; transform:scale(0.3) rotate(-15deg); }
+    to   { opacity:1; transform:scale(1) rotate(0deg); }
+  }
+  .member-card:nth-child(1){animation-delay:0.05s}
+  .member-card:nth-child(2){animation-delay:0.14s}
+  .member-card:nth-child(3){animation-delay:0.23s}
+  .member-card:nth-child(4){animation-delay:0.32s}
+
+  .card-header {
+    padding: 1.1rem 1.2rem 0.9rem;
+    border-bottom: 3px solid var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .avatar-emoji {
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    border: 3.5px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .member-info { flex: 1; min-width: 0; }
+  .member-name {
+    font-family: 'Bangers', cursive;
+    font-size: 1.35rem;
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+    -webkit-text-stroke: 0.5px var(--ink);
+  }
+  .member-archetype {
+    font-family: 'Boogaloo', cursive;
+    font-size: 0.78rem;
+    color: #666;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+  }
+  .vibe-badge {
+    font-family: 'Boogaloo', cursive;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 2.5px solid var(--ink);
+    white-space: nowrap;
+    align-self: flex-start;
+    flex-shrink: 0;
+    margin-top: 2px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .speech-area { padding: 1rem 1.2rem 1.3rem; }
+  .speech-bubble {
+    position: relative;
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    padding: 0.9rem 1rem;
+    font-family: 'Comic Neue', cursive;
+    font-size: 0.93rem;
+    font-weight: 700;
+    line-height: 1.55;
+    color: var(--ink);
+    background: #fffbf0;
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    top: 18px; left: -15px;
+    width: 0; height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 15px solid var(--ink);
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: 19px; left: -11px;
+    width: 0; height: 0;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    border-right: 12px solid #fffbf0;
+  }
+
+  .theme-0 .card-header { background: #fff0f0; }
+  .theme-0 .avatar-emoji { background: #ffd0d0; }
+  .theme-0 .vibe-badge   { background: #ffd0d0; }
+  .theme-1 .card-header { background: #f0f0ff; }
+  .theme-1 .avatar-emoji { background: #d0d0ff; }
+  .theme-1 .vibe-badge   { background: #d0d0ff; }
+  .theme-2 .card-header { background: #f0fff5; }
+  .theme-2 .avatar-emoji { background: #b8f0cc; }
+  .theme-2 .vibe-badge   { background: #b8f0cc; }
+  .theme-3 .card-header { background: #fffae0; }
+  .theme-3 .avatar-emoji { background: #ffe080; }
+  .theme-3 .vibe-badge   { background: #ffe080; }
+
+  .empty-state { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: #ccc; }
+  .empty-emoji { font-size: 5rem; display: block; margin-bottom: 1rem; }
+  .empty-text { font-family: 'Bangers', cursive; font-size: 1.7rem; letter-spacing: 2px; }
+  .empty-sub { font-family: 'Boogaloo', cursive; font-size: 1.05rem; margin-top: 0.4rem; color: #ddd; }
+
+  .footer { text-align: center; margin-top: 3rem; font-family: 'Boogaloo', cursive; font-size: 0.9rem; color: #bbb; }
+</style>
+</head>
+<body>
+<div class="main-wrap">
+
+  <div class="header">
+    <div class="header-badge"> SUMMONING LEGENDS SINCE THE DAWN OF TIME </div>
+    <div class="title-wrap">
+      <h1>THE COUNCIL</h1>
+    </div>
+    <p class="header-sub">Ask anything. 4 legendary minds bicker, philosophize, and spectacularly disagree.</p>
+  </div>
+
+  <div class="question-section">
+    <div class="question-label">🎤 Your Question / Opinion :</div>
+    <textarea class="question-textarea" id="questionInput" placeholder="e.g. Should I quit my job and become a goat farmer? Is pineapple on pizza okay? Should I text my ex?"></textarea>
+    <div class="personalities-row" id="personalityChips"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-summon" id="summonBtn" onclick="summonCouncil()">🏛️ SUMMON THE COUNCIL</button>
+    <button class="btn btn-randomize" id="randomizeBtn" onclick="randomizePersonalities()">🎲 RANDOMIZE</button>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="loader-stage">
+      <svg class="loader-svg" viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg">
+        <g class="orbit-dot"><circle cx="130" cy="18" r="9" fill="#FF3333" stroke="#111" stroke-width="2.5"/><circle cx="130" cy="18" r="4" fill="#fff" opacity="0.5"/></g>
+        <g class="orbit-dot"><circle cx="195" cy="65" r="9" fill="#2B7FFF" stroke="#111" stroke-width="2.5"/><circle cx="195" cy="65" r="4" fill="#fff" opacity="0.5"/></g>
+        <g class="orbit-dot"><circle cx="130" cy="112" r="9" fill="#1DB954" stroke="#111" stroke-width="2.5"/><circle cx="130" cy="112" r="4" fill="#fff" opacity="0.5"/></g>
+        <g class="orbit-dot"><circle cx="65" cy="65" r="9" fill="#9B30FF" stroke="#111" stroke-width="2.5"/><circle cx="65" cy="65" r="4" fill="#fff" opacity="0.5"/></g>
+        <g class="zap-left"><polygon points="48,40 35,68 46,68 38,90 58,58 47,58" fill="#FFE600" stroke="#111" stroke-width="2" stroke-linejoin="round"/></g>
+        <g class="zap-right"><polygon points="212,40 199,68 210,68 202,90 222,58 211,58" fill="#FFE600" stroke="#111" stroke-width="2" stroke-linejoin="round"/></g>
+        <g class="centre-burst"><polygon points="130,38 136,55 153,48 144,63 162,65 144,67 153,82 136,75 130,92 124,75 107,82 116,67 98,65 116,63 107,48 124,55" fill="#FF3333" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/></g>
+      </svg>
+    </div>
+    <div class="loading-dots"><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="council-strip" id="councilStrip">🔊 THE COUNCIL HAS SPOKEN 🔊</div>
+
+  <div class="council-grid" id="councilGrid">
+    <div class="empty-state"></div>
+  </div>
+
+</div>
+
+<script>
+  // ================================================================
+  //  👇 PASTE YOUR CLOUDFLARE WORKER URL HERE after deploying
+  // ================================================================
+  const WORKER_URL = 'https://thecouncil-api.shaurya-chopra.workers.dev';
+  // ================================================================
+
+const ALL_PERSONALITIES = [
+  {name:"Socrates",emoji:"🏺",archetype:"Greek Philosopher",vibe:"Annoyingly Wise"},
+  {name:"Steve Jobs",emoji:"🍎",archetype:"Tech Visionary",vibe:"Brutally Honest"},
+  {name:"Confucius",emoji:"📜",archetype:"Ancient Sage",vibe:"Cryptically Deep"},
+  {name:"Shakespeare",emoji:"🎭",archetype:"Bard of Avon",vibe:"Dramatically Extra"},
+  {name:"Einstein",emoji:"🧪",archetype:"Theoretical Physicist",vibe:"Relativity Vibes"},
+  {name:"Cleopatra",emoji:"👑",archetype:"Queen of Egypt",vibe:"Regal & Sassy"},
+  {name:"Buddha",emoji:"🧘",archetype:"Enlightened One",vibe:"Suspiciously Calm"},
+  {name:"Nikola Tesla",emoji:"⚡",archetype:"Mad Genius",vibe:"Chaotically Brilliant"},
+  {name:"Salman Khan",emoji:"🎬",archetype:"Bollywood Superstar",vibe:"Entertainment Ka Badshah"},
+  {name:"Sun Tzu",emoji:"⚔️",archetype:"War Strategist",vibe:"Everything Is War"},
+  {name:"Mr Beast",emoji:"🤑",archetype:"YouTube Philanthropist",vibe:"Last to Leave Wins"},
+  {name:"Gandhi",emoji:"☮️",archetype:"Peaceful Rebel",vibe:"Aggressively Chill"},
+  {name:"Narendra Modi",emoji:"🇮🇳",archetype:"Prime Minister",vibe:"Development First"},
+  {name:"Darwin",emoji:"🐒",archetype:"Evolutionary Biologist",vibe:"Survival Mode"},
+  {name:"Edgy Redditor",emoji:"�‍💻",archetype:"Internet Debater",vibe:"Actually..."},
+  {name:"Leonardo da Vinci",emoji:"🎨",archetype:"Renaissance Man",vibe:"Annoyingly Talented"},
+  {name:"Napoleon",emoji:"🎖️",archetype:"Military Emperor",vibe:"Short-Fused Genius"},
+  {name:"Sherlock Holmes",emoji:"🔍",archetype:"Fictional Detective",vibe:"Condescending Genius"},
+  {name:"A Golden Retriever",emoji:"🐕",archetype:"Good Boy",vibe:"Pure Unconditional Love"},
+  {name:"A Medieval Peasant",emoji:"🌾",archetype:"Common Folk",vibe:"Deeply Confused"},
+  {name:"A 13-Year-Old Online",emoji:"💻",archetype:"Internet Native",vibe:"Unhinged Energy"},
+  {name:"A Fortune Cookie",emoji:"🥠",archetype:"Ancient Snack Wisdom",vibe:"Vague & Profound"},
+  {name:"Your Dad",emoji:"👨",archetype:"Universal Father Figure",vibe:"Unsolicited Advice"},
+  {name:"The Stock Market",emoji:"📈",archetype:"Chaotic Oracle",vibe:"Irrationally Exuberant"},
+  {name:"A Flat Earther",emoji:"🌐",archetype:"Alternative Theorist",vibe:"Confidently Wrong"},
+  {name:"Gordon Ramsay",emoji:"👨‍🍳",archetype:"Celebrity Chef",vibe:"Aggressively Disappointed"},
+  {name:"Samosa",emoji:"�",archetype:"Indian Snack",vibe:"Crispy & Spicy"},
+  {name:"Chota Bheem",emoji:"🦸",archetype:"Indian Superkid",vibe:"Laddoo Power"},
+  {name:"A Conspiracy Theorist",emoji:"📡",archetype:"Truth Seeker",vibe:"Sees Patterns Everywhere"},
+  {name:"A Motivational Poster",emoji:"💪",archetype:"Office Wall Decor",vibe:"Hollow Enthusiasm"},
+  {name:"Aristotle",emoji:"📚",archetype:"The Stagirite",vibe:"Pedantically Correct"},
+  {name:"A Silicon Valley Bro",emoji:"🚀",archetype:"Disruptive Visionary",vibe:"Moving Fast Breaking Things"},
+  {name:"Mother Teresa",emoji:"🕊️",archetype:"Saint of Kindness",vibe:"Judgmentally Kind"},
+  {name:"Riyaz Aly",emoji:"📱",archetype:"Cringe TikToker",vibe:"Trendsetter"},
+  {name:"A Pirate Captain",emoji:"🏴‍☠️",archetype:"Seafaring Outlaw",vibe:"Chaotically Free"},
+];
+
+let currentPersonalities = [];
+
+function pickRandom(arr, n) {
+  return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+}
+function randomizePersonalities() {
+  currentPersonalities = pickRandom(ALL_PERSONALITIES, 4);
+  renderChips();
+}
+function renderChips() {
+  document.getElementById('personalityChips').innerHTML =
+    currentPersonalities.map(p => `<div class="personality-chip">${p.emoji} ${escHtml(p.name)}</div>`).join('');
+}
+
+async function summonCouncil() {
+  const question = document.getElementById('questionInput').value.trim();
+  const errorBox = document.getElementById('errorBox');
+  errorBox.classList.remove('show');
+
+  if (!question) { showError('🎤 Please type your question or dilemma first!'); return; }
+  if (currentPersonalities.length === 0) { showError('🎲 Click Randomize to pick your legends!'); return; }
+
+  setLoading(true);
+  document.getElementById('councilStrip').classList.remove('show');
+  document.getElementById('councilGrid').innerHTML = '';
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, personalities: currentPersonalities })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${res.status}`);
+    }
+
+    const data = await res.json();
+    setLoading(false);
+    renderCouncil(data.members);
+  } catch (err) {
+    setLoading(false);
+    showError('😬 ' + (err.message || 'Something went wrong. Try again!'));
+  }
+}
+
+function renderCouncil(members) {
+  document.getElementById('councilStrip').classList.add('show');
+  document.getElementById('councilGrid').innerHTML = members.map((m, i) => `
+    <div class="member-card theme-${i % 4}">
+      <div class="card-header">
+        <div class="avatar-emoji">${m.emoji}</div>
+        <div class="member-info">
+          <div class="member-name">${escHtml(m.name)}</div>
+          <div class="member-archetype">${escHtml(m.archetype)}</div>
+        </div>
+        <div class="vibe-badge">${escHtml(m.vibe)}</div>
+      </div>
+      <div class="speech-area">
+        <div class="speech-bubble">${escHtml(m.response)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function setLoading(on) {
+  document.getElementById('loadingWrap').classList.toggle('show', on);
+  document.getElementById('summonBtn').disabled = on;
+  document.getElementById('randomizeBtn').disabled = on;
+}
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('show');
+}
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+randomizePersonalities();
+</script>
+</body>
+</html>
