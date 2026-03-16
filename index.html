@@ -233,9 +233,9 @@
   /* Show class - Makes error box visible */
   .error-box.show { display: block; }
 
-  /* Loading animation container - Hidden by default, shown during API calls */
-  .loading-wrap { display: none; text-align: center; padding: 0.5rem 2rem 3rem; }
-  .loading-wrap.show { display: block; }
+  /* Loading animation container - Visible by default, animations controlled by state */
+  .loading-wrap { text-align: center; padding: 0.5rem 2rem 3rem; opacity: 0.3; transition: opacity 0.3s; }
+  .loading-wrap.animating { opacity: 1; }
   /* Loading title text - "SUMMONING..." with pulsing animation */
   .loading-title {
     font-family: 'Bangers', cursive;
@@ -253,8 +253,9 @@
   /* SVG dimensions and overflow settings */
   .loader-svg { width: 260px; height: 130px; overflow: visible; }
 
-  /* Orbital dots animation - Rotating dots around center point */
-  .orbit-dot { animation: orbitSpin 1.8s linear infinite; transform-origin: 130px 65px; }
+  /* Orbital dots animation - Static by default, animated when active */
+  .orbit-dot { transform-origin: 130px 65px; }
+  .loading-wrap.animating .orbit-dot { animation: orbitSpin 1.8s linear infinite; }
   /* Staggered animation delays for each orbit dot */
   .orbit-dot:nth-child(1){ animation-delay: 0s; }
   .orbit-dot:nth-child(2){ animation-delay: -0.45s; }
@@ -262,29 +263,35 @@
   .orbit-dot:nth-child(4){ animation-delay: -1.35s; }
   /* Keyframe animation for 360-degree rotation */
   @keyframes orbitSpin { to { transform: rotate(360deg); } }
-  /* Center burst animation - Pulsing star in the middle */
-  .centre-burst { animation: burstPulse 0.7s ease-in-out infinite alternate; transform-origin: 130px 65px; }
+  /* Center burst animation - Static by default, pulsing when active */
+  .centre-burst { transform-origin: 130px 65px; }
+  .loading-wrap.animating .centre-burst { animation: burstPulse 0.7s ease-in-out infinite alternate; }
   /* Keyframe for scaling animation */
   @keyframes burstPulse { from{transform:scale(0.88)} to{transform:scale(1.08)} }
-  /* Lightning bolt animations - Left and right zapping effects */
-  .zap-left  { animation: zapLeft  0.6s ease-in-out infinite alternate; transform-origin: 50px 65px; }
-  .zap-right { animation: zapRight 0.6s ease-in-out infinite alternate; transform-origin: 210px 65px; }
+  /* Lightning bolt animations - Static by default, zapping when active */
+  .zap-left  { transform-origin: 50px 65px; }
+  .zap-right { transform-origin: 210px 65px; }
+  .loading-wrap.animating .zap-left  { animation: zapLeft  0.6s ease-in-out infinite alternate; }
+  .loading-wrap.animating .zap-right { animation: zapRight 0.6s ease-in-out infinite alternate; }
   /* Keyframes for lightning bolt rotation and scaling */
   @keyframes zapLeft  { from{transform:rotate(-15deg) scale(0.9)} to{transform:rotate(15deg) scale(1.1)} }
   @keyframes zapRight { from{transform:rotate(15deg)  scale(0.9)} to{transform:rotate(-15deg) scale(1.1)} }
-  /* Question mark bounce animation */
-  .qmark { animation: qBounce 0.5s ease-in-out infinite alternate; transform-origin: 130px 65px; }
+  /* Question mark bounce animation - Static by default, bouncing when active */
+  .qmark { transform-origin: 130px 65px; }
+  .loading-wrap.animating .qmark { animation: qBounce 0.5s ease-in-out infinite alternate; }
   /* Keyframe for vertical bouncing */
   @keyframes qBounce { from{transform:translateY(3px)} to{transform:translateY(-5px)} }
 
   /* Loading dots container - Animated dots below the SVG */
   .loading-dots { display: flex; justify-content: center; gap: 10px; margin-top: 1.2rem; }
-  /* Individual loading dot styling */
+  /* Individual loading dot styling - Static by default, bouncing when active */
   .loading-dots span {
     width: 14px; height: 14px;
     border-radius: 50%;
     border: 2.5px solid var(--ink);
     display: inline-block;
+  }
+  .loading-wrap.animating .loading-dots span {
     animation: dotBounce 0.6s ease-in-out infinite alternate;
   }
   /* Color and delay variations for each dot */
@@ -528,8 +535,8 @@
 // Complete list of all available legendary personalities
 // Each personality has: name, emoji, archetype (role), and vibe (personality trait)
 const ALL_PERSONALITIES = [
-  {name:"Socrates",emoji:"🏺",archetype:"Greek Philosopher",vibe:"Annoyingly Wise"},
-  {name:"Steve Jobs",emoji:"🍎",archetype:"Tech Visionary",vibe:"Brutally Honest"},
+  {name:"Socrates",emoji:"🏺",archetype:"Professional Philosophical Gaslighter",vibe:"Annoyingly Wise"},
+  {name:"Steve Jobs",emoji:"🍎",archetype:"Turtleneck Cult Leader of Apple Fanboys",vibe:"Selling Air for $999"},
   {name:"Confucius",emoji:"📜",archetype:"Ancient Sage",vibe:"Cryptically Deep"},
   {name:"Shakespeare",emoji:"🎭",archetype:"Bard of Avon",vibe:"Dramatically Extra"},
   {name:"Einstein",emoji:"🧪",archetype:"Theoretical Physicist",vibe:"Relativity Vibes"},
@@ -542,7 +549,7 @@ const ALL_PERSONALITIES = [
   {name:"Gandhi",emoji:"☮️",archetype:"Peaceful Rebel",vibe:"Aggressively Chill"},
   {name:"Narendra Modi",emoji:"🇮🇳",archetype:"Prime Minister",vibe:"Development First"},
   {name:"Darwin",emoji:"🐒",archetype:"Evolutionary Biologist",vibe:"Survival Mode"},
-  {name:"Edgy Redditor",emoji:"🤓‍💻",archetype:"Internet Debater",vibe:"Actually..."},
+  {name:"Edgy Redditor",emoji:"💻",archetype:"Internet Debater",vibe:"Actually..."},
   {name:"Leonardo da Vinci",emoji:"🎨",archetype:"Renaissance Man",vibe:"Annoyingly Talented"},
   {name:"Napoleon",emoji:"🎖️",archetype:"Military Emperor",vibe:"Short-Fused Genius"},
   {name:"Sherlock Holmes",emoji:"🔍",archetype:"Fictional Detective",vibe:"Condescending Genius"},
@@ -655,9 +662,10 @@ function renderCouncil(members) {
 }
 
 // Control loading state UI
-// Parameters: on (boolean) - true to show loading, false to hide
+// Parameters: on (boolean) - true to show loading animations, false to show static state
 function setLoading(on) {
-  document.getElementById('loadingWrap').classList.toggle('show', on);
+  const loadingWrap = document.getElementById('loadingWrap');
+  loadingWrap.classList.toggle('animating', on);
   document.getElementById('summonBtn').disabled = on;
   document.getElementById('randomizeBtn').disabled = on;
 }
