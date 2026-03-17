@@ -631,6 +631,10 @@ async function summonCouncil() {
     const data = await res.json();
     setLoading(false);
     renderCouncil(data.members);
+    // Auto-scroll to bottom of page
+    setTimeout(() => {
+      window.scrollTo({ behavior: 'smooth', top: document.body.scrollHeight });
+    }, 100);
   } catch (err) {
     // Handle network or API errors
     setLoading(false);
