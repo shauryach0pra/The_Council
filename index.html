@@ -10,6 +10,7 @@
 
 <!-- Google Fonts import for comic book style typography -->
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&family=Permanent+Marker&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
   /* CSS Custom Properties (Variables) - Define consistent color scheme and design tokens */
   :root {
@@ -465,6 +466,64 @@
 
   /* Footer styling - Bottom section of the page */
   .footer { text-align: center; margin-top: 3rem; font-family: 'Boogaloo', cursive; font-size: 0.9rem; color: #bbb; }
+
+  /* ── Music Indicator Widget ── */
+  .music-widget {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 40px;
+    padding: 0.45rem 1rem 0.45rem 0.6rem;
+    box-shadow: 4px 4px 0 var(--ink);
+    font-family: 'Boogaloo', cursive;
+    font-size: 0.92rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s, transform 0.4s;
+    pointer-events: none;
+  }
+  .music-widget.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .music-widget-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    background: var(--green);
+    flex-shrink: 0;
+    animation: musicPulse 1.2s ease-in-out infinite alternate;
+  }
+  .music-widget.muted .music-widget-dot {
+    background: #ccc;
+    animation: none;
+  }
+  @keyframes musicPulse {
+    from { transform: scale(0.8); opacity: 0.6; }
+    to   { transform: scale(1.3); opacity: 1; }
+  }
+  .music-label { color: var(--ink); letter-spacing: 0.5px; }
+  .music-mute-btn {
+    background: none;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    line-height: 1;
+  }
+  .music-mute-btn:hover { background: #f0f0f0; }
 </style>
 </head>
 <body>
@@ -523,6 +582,13 @@
     <div class="empty-state"></div>
   </div>
 
+</div>
+
+<!-- Floating music indicator widget -->
+<div class="music-widget" id="musicWidget">
+  <div class="music-widget-dot" id="musicDot"></div>
+  <span class="music-label" id="musicLabel">🎵 Ambient</span>
+  <button class="music-mute-btn" id="musicMuteBtn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
 </div>
 
 <script>
@@ -613,8 +679,12 @@ async function summonCouncil() {
   document.getElementById('councilStrip').classList.remove('show');
   document.getElementById('councilGrid').innerHTML = '';
 
+  // 🎵 Fire HuggingFace emotion detection immediately (non-blocking)
+  // Music starts ~500ms in, well before the 3-5s council response
+  classifyMoodHF(question).then(mood => playMood(mood));
+
   try {
-    // Make API call to the backend
+    // Make API call to the backend (fires in parallel with HF above)
     const res = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -688,6 +758,316 @@ function showError(msg) {
 // Returns: Escaped HTML string
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ================================================================
+//  🎵 AMBIENT MUSIC ENGINE
+// ================================================================
+
+const MOOD_CONFIG = {
+  neutral:       { label: '🌿 Calm',        bpm: 58  },
+  anxious:       { label: '⚡ Tense',        bpm: 118 },
+  sad:           { label: '🌧️ Melancholic',  bpm: 48  },
+  romantic:      { label: '💕 Romantic',     bpm: 62  },
+  playful:       { label: '🎉 Playful',      bpm: 108 },
+  philosophical: { label: '🔮 Cosmic',       bpm: 38  },
+  career:        { label: '💼 Focused',      bpm: 82  },
+  chaotic:       { label: '🌀 Chaotic',      bpm: 96  },
+};
+
+const music = { mood: null, playing: false, muted: false, synths: [], parts: [], effects: [] };
+
+// ── HuggingFace emotion label → music mood ───────────────────────
+const HF_TO_MOOD = {
+  'joy':      'playful',
+  'sadness':  'sad',
+  'anger':    'chaotic',
+  'fear':     'anxious',
+  'disgust':  'chaotic',
+  'surprise': 'romantic',
+  'neutral':  'neutral',
+};
+
+// ── Emotion detection via Worker proxy (HF token never exposed) ──
+async function classifyMoodHF(text) {
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emotion_text: text }),
+    });
+    if (!res.ok) return 'neutral';
+    const data = await res.json();
+    return HF_TO_MOOD[data.emotion] ?? 'neutral';
+  } catch (e) {
+    return 'neutral'; // silent fallback
+  }
+}
+
+// ── Cleanup all active audio nodes ──────────────────────────────
+async function cleanupMusic() {
+  Tone.Transport.stop();
+  Tone.Transport.cancel();
+  music.parts.forEach(p  => { try { p.stop(); p.dispose(); } catch(e){} });
+  music.synths.forEach(s => { try { s.dispose(); } catch(e){} });
+  music.effects.forEach(e => { try { e.dispose(); } catch(e){} });
+  music.parts = []; music.synths = []; music.effects = [];
+}
+
+// ── Master: detect mood and start playback ───────────────────────
+async function playMood(mood) {
+  await cleanupMusic();
+  await Tone.start();
+  music.mood = mood;
+  music.playing = true;
+  Tone.Transport.bpm.value = MOOD_CONFIG[mood].bpm;
+
+  const reverb = new Tone.Reverb({ decay: 5, wet: 0.55 }).toDestination();
+  const delay  = new Tone.FeedbackDelay('8n', 0.25).connect(reverb);
+  music.effects.push(reverb, delay);
+
+  const builders = { neutral, anxious, sad, romantic, playful, philosophical, career, chaotic };
+  builders[mood](reverb, delay);
+
+  if (!music.muted) Tone.Transport.start();
+  updateMusicUI();
+}
+
+// ── NEUTRAL — gentle C-major pad ────────────────────────────────
+function neutral(reverb) {
+  const pad = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 2.5, decay: 1, sustain: 0.7, release: 4 },
+    volume: -20,
+  }).connect(reverb);
+  music.synths.push(pad);
+
+  const chords = [
+    { time:'0:0',  notes:['C3','G3','E4'] },
+    { time:'4:0',  notes:['A2','E3','C4'] },
+    { time:'8:0',  notes:['F2','C3','A3'] },
+    { time:'12:0', notes:['G2','D3','B3'] },
+  ];
+  const part = new Tone.Part((t, v) => pad.triggerAttackRelease(v.notes, '3m', t), chords);
+  part.loop = true; part.loopEnd = '16m'; part.start(0);
+  music.parts.push(part);
+}
+
+// ── ANXIOUS — fast minor arpeggio ───────────────────────────────
+function anxious(reverb) {
+  const synth = new Tone.Synth({
+    oscillator: { type: 'sawtooth' },
+    envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.4 },
+    volume: -22,
+  }).connect(reverb);
+  music.synths.push(synth);
+
+  const notes = ['E4','G4','B4','E5','D5','B4','G4','F#4','E4','A4','C5','E5','B4','G#4'];
+  let i = 0;
+  const loop = new Tone.Loop(t => {
+    synth.triggerAttackRelease(notes[i % notes.length], '16n', t);
+    i++;
+  }, '8n');
+  loop.start(0);
+  music.parts.push(loop);
+
+  // Low rumble
+  const lfo = new Tone.Oscillator({ frequency: 55, type: 'sine', volume: -30 }).connect(reverb);
+  lfo.start();
+  music.synths.push(lfo);
+}
+
+// ── SAD — slow A-minor pads ──────────────────────────────────────
+function sad(reverb) {
+  const pad = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 3, decay: 2, sustain: 0.6, release: 5 },
+    volume: -18,
+  }).connect(reverb);
+  music.synths.push(pad);
+
+  const chords = [
+    { time:'0:0',  notes:['A2','C3','E3'] },
+    { time:'6:0',  notes:['F2','A2','C3'] },
+    { time:'12:0', notes:['G2','B2','D3'] },
+    { time:'18:0', notes:['E2','G2','B2'] },
+  ];
+  const part = new Tone.Part((t, v) => pad.triggerAttackRelease(v.notes, '5m', t), chords);
+  part.loop = true; part.loopEnd = '24m'; part.start(0);
+  music.parts.push(part);
+}
+
+// ── ROMANTIC — warm slow pads ────────────────────────────────────
+function romantic(reverb, delay) {
+  const pad = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 2, decay: 1.5, sustain: 0.75, release: 4 },
+    volume: -19,
+  }).connect(delay);
+  music.synths.push(pad);
+
+  const melody = new Tone.Synth({
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.5, decay: 0.5, sustain: 0.6, release: 2 },
+    volume: -26,
+  }).connect(reverb);
+  music.synths.push(melody);
+
+  const chords = [
+    { time:'0:0',  notes:['C3','E3','G3','B3'] },
+    { time:'4:0',  notes:['A2','C3','E3','G3'] },
+    { time:'8:0',  notes:['F2','A2','C3','E3'] },
+    { time:'12:0', notes:['G2','B2','D3','F3'] },
+  ];
+  const melNotes = [
+    {time:'0:0',n:'E5'},{time:'2:0',n:'D5'},{time:'4:0',n:'C5'},
+    {time:'6:0',n:'A4'},{time:'8:0',n:'C5'},{time:'10:0',n:'B4'},
+    {time:'12:0',n:'G4'},{time:'14:0',n:'A4'},
+  ];
+  const chordPart = new Tone.Part((t, v) => pad.triggerAttackRelease(v.notes, '3m', t), chords);
+  chordPart.loop = true; chordPart.loopEnd = '16m'; chordPart.start(0);
+  const melPart = new Tone.Part((t, v) => melody.triggerAttackRelease(v.n, '1m', t), melNotes);
+  melPart.loop = true; melPart.loopEnd = '16m'; melPart.start(0);
+  music.parts.push(chordPart, melPart);
+}
+
+// ── PLAYFUL — bouncy C-major ─────────────────────────────────────
+function playful(reverb) {
+  const synth = new Tone.Synth({
+    oscillator: { type: 'square', volume: -8 },
+    envelope: { attack: 0.01, decay: 0.15, sustain: 0.4, release: 0.3 },
+    volume: -22,
+  }).connect(reverb);
+  music.synths.push(synth);
+
+  const notes = ['C5','E5','G5','C6','G5','E5','C5','D5','F5','A5','C6','A5','F5','D5'];
+  let i = 0;
+  const loop = new Tone.Loop(t => {
+    synth.triggerAttackRelease(notes[i % notes.length], '8n', t);
+    i++;
+  }, '4n');
+  loop.start(0);
+  music.parts.push(loop);
+
+  const bass = new Tone.Synth({
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.05, decay: 0.2, sustain: 0.3, release: 0.4 },
+    volume: -24,
+  }).connect(reverb);
+  music.synths.push(bass);
+  const bassNotes = ['C2','C2','G2','G2','F2','F2','G2','G2'];
+  let b = 0;
+  const bassLoop = new Tone.Loop(t => {
+    bass.triggerAttackRelease(bassNotes[b % bassNotes.length], '4n', t);
+    b++;
+  }, '2n');
+  bassLoop.start(0);
+  music.parts.push(bassLoop);
+}
+
+// ── PHILOSOPHICAL — cosmic drone ─────────────────────────────────
+function philosophical(reverb) {
+  const drone = new Tone.Oscillator({ frequency: 'C2', type: 'sine', volume: -28 }).connect(reverb);
+  const drone2 = new Tone.Oscillator({ frequency: 'G2', type: 'sine', volume: -32 }).connect(reverb);
+  drone.start(); drone2.start();
+  music.synths.push(drone, drone2);
+
+  const pad = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 4, decay: 2, sustain: 0.8, release: 6 },
+    volume: -22,
+  }).connect(reverb);
+  music.synths.push(pad);
+
+  const chords = [
+    { time:'0:0',  notes:['C3','G3','Bb3','D4'] },
+    { time:'8:0',  notes:['Ab2','Eb3','G3','C4'] },
+    { time:'16:0', notes:['F2','C3','Eb3','Ab3'] },
+    { time:'24:0', notes:['G2','D3','F3','Bb3']  },
+  ];
+  const part = new Tone.Part((t, v) => pad.triggerAttackRelease(v.notes, '7m', t), chords);
+  part.loop = true; part.loopEnd = '32m'; part.start(0);
+  music.parts.push(part);
+}
+
+// ── CAREER — steady focused pulse ───────────────────────────────
+function career(reverb) {
+  const synth = new Tone.Synth({
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 0.6 },
+    volume: -24,
+  }).connect(reverb);
+  music.synths.push(synth);
+
+  const notes = ['C4','E4','G4','B4','A4','F4','D4','G4'];
+  let i = 0;
+  const loop = new Tone.Loop(t => {
+    synth.triggerAttackRelease(notes[i % notes.length], '8n', t);
+    i++;
+  }, '4n');
+  loop.start(0);
+  music.parts.push(loop);
+
+  const pad = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 1, decay: 1, sustain: 0.5, release: 2 },
+    volume: -28,
+  }).connect(reverb);
+  music.synths.push(pad);
+  const chordPart = new Tone.Part((t, v) => pad.triggerAttackRelease(v.notes, '1m', t), [
+    { time:'0:0', notes:['C3','G3'] },
+    { time:'2:0', notes:['A2','E3'] },
+    { time:'4:0', notes:['F2','C3'] },
+    { time:'6:0', notes:['G2','D3'] },
+  ]);
+  chordPart.loop = true; chordPart.loopEnd = '8m'; chordPart.start(0);
+  music.parts.push(chordPart);
+}
+
+// ── CHAOTIC — dissonant irregular ───────────────────────────────
+function chaotic(reverb, delay) {
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'sawtooth' },
+    envelope: { attack: 0.05, decay: 0.3, sustain: 0.2, release: 0.8 },
+    volume: -24,
+  }).connect(delay);
+  music.synths.push(synth);
+
+  const clusters = [
+    { time:'0:0',  notes:['C#4','G4','Bb4']  },
+    { time:'1:2',  notes:['D4','Ab4','B4']   },
+    { time:'3:0',  notes:['Eb4','A4','C5']   },
+    { time:'4:1',  notes:['E4','Bb4','Db5']  },
+    { time:'5:3',  notes:['F4','B4','D5']    },
+    { time:'7:0',  notes:['F#4','C5','Eb5']  },
+  ];
+  const part = new Tone.Part((t, v) => synth.triggerAttackRelease(v.notes, '4n', t), clusters);
+  part.loop = true; part.loopEnd = '8m'; part.start(0);
+  music.parts.push(part);
+}
+
+// ── UI helpers ───────────────────────────────────────────────────
+function updateMusicUI() {
+  const widget = document.getElementById('musicWidget');
+  const label  = document.getElementById('musicLabel');
+  const btn    = document.getElementById('musicMuteBtn');
+  const dot    = document.getElementById('musicDot');
+
+  if (!music.playing) { widget.classList.remove('visible'); return; }
+
+  widget.classList.add('visible');
+  label.textContent = MOOD_CONFIG[music.mood]?.label ?? '🎵 Playing';
+  btn.textContent   = music.muted ? '🔇' : '🔊';
+  if (music.muted) widget.classList.add('muted');
+  else             widget.classList.remove('muted');
+  dot.style.background = music.muted ? '#ccc' : '#1DB954';
+}
+
+function toggleMute() {
+  music.muted = !music.muted;
+  if (music.muted) Tone.Transport.stop();
+  else             Tone.Transport.start();
+  updateMusicUI();
 }
 
 // Initialize the app by randomizing personalities on page load
