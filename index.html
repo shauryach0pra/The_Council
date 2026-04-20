@@ -679,6 +679,9 @@ async function summonCouncil() {
   document.getElementById('councilStrip').classList.remove('show');
   document.getElementById('councilGrid').innerHTML = '';
 
+  // 🔓 Unlock audio context immediately (must happen synchronously in click handler)
+  await Tone.start();
+
   // 🎵 Fire HuggingFace emotion detection immediately (non-blocking)
   // Music starts ~500ms in, well before the 3-5s council response
   classifyMoodHF(question).then(mood => playMood(mood));
@@ -817,7 +820,6 @@ async function cleanupMusic() {
 // ── Master: detect mood and start playback ───────────────────────
 async function playMood(mood) {
   await cleanupMusic();
-  await Tone.start();
   music.mood = mood;
   music.playing = true;
   Tone.Transport.bpm.value = MOOD_CONFIG[mood].bpm;
